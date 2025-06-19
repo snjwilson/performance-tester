@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -18,9 +19,29 @@ func main() {
 	log.SetOutput(logFile)
 
 	log.Println("Performance tester initializing...")
-	cmd := exec.Command("k6", "run", "load-test.ts")
 
-	// Capture the output of the command
+	startPrometheus := func ()  {
+		log.Println("Starting Prometheus...")
+		cmd := exec.Command("prometheus", "--config.file=./config/prometheus.yml", "--web.enable-remote-write-receiver")
+		_, err = cmd.Output()
+		if err != nil {
+			log.Printf("Error while running prometheus binary: %v", err)
+			return
+		}
+	}
+	stopPrometheus := func ()  {
+		log.Println("Stopping Prometheus...")
+		cmd := exec.Command("pkill", "prometheus")
+		_, err = cmd.Output()
+		if err != nil {
+			log.Printf("Error while stopping prometheus binary: %v", err)
+			return
+		}
+	}
+
+	go startPrometheus()
+	defer stopPrometheus()
+	cmd := exec.Command("k6", "run", "load-test.ts", "--vus", "2", "--duration", "5s", "--out", "experimental-prometheus-rw")
 	output, err := cmd.Output()
 	if err != nil {
 		log.Printf("Error while running k6 binary: %v", err)
@@ -30,6 +51,7 @@ func main() {
 	// Log the output
 	log.Println("Command Output:")
 	log.Println(string(output))
-
 	log.Println("Performance Tester successfully completed!")
+	fmt.Println("Press Enter to exit...")
+	fmt.Scanln()
 }
