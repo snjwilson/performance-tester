@@ -41,6 +41,7 @@ func main() {
 
 	go startPrometheus()
 	defer stopPrometheus()
+	// todo: set remote write url k6 env K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write
 	cmd := exec.Command("k6", "run", "load-test.ts", "--vus", "2", "--duration", "5s", "--out", "experimental-prometheus-rw")
 	output, err := cmd.Output()
 	if err != nil {
