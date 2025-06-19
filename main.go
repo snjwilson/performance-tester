@@ -1,24 +1,35 @@
 package main
 
 import (
-	"fmt"
+	"log"
+	"os"
 	"os/exec"
 )
 
 func main() {
-	fmt.Println("Performance tester initializing...")
+	// Create a log file
+	logFile, err := os.OpenFile("performance-tester.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatalf("Failed to open log file: %v", err)
+	}
+	defer logFile.Close()
+
+	// Set log output to the file
+	log.SetOutput(logFile)
+
+	log.Println("Performance tester initializing...")
 	cmd := exec.Command("k6", "run", "load-test.ts")
 
 	// Capture the output of the command
 	output, err := cmd.Output()
 	if err != nil {
-		fmt.Println("Error while running k6 binary:", err)
+		log.Printf("Error while running k6 binary: %v", err)
 		return
 	}
 
-	// Print the output
-	fmt.Println("Command Output:")
-	fmt.Println(string(output))
+	// Log the output
+	log.Println("Command Output:")
+	log.Println(string(output))
 
-	fmt.Println("Performance Tester successfully completed!")
+	log.Println("Performance Tester successfully completed!")
 }
