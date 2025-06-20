@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 	"os/exec"
+
+	"github.com/snjwilson/performance-tester/config"
 )
 
 func main() {
@@ -19,6 +21,12 @@ func main() {
 	log.SetOutput(logFile)
 
 	log.Println("Performance tester initializing...")
+
+	config, err := config.ReadConfig()
+	if err != nil {
+		log.Fatalf("Error reading config: %v", err)
+		return
+	}
 
 	startPrometheus := func ()  {
 		log.Println("Starting Prometheus...")
@@ -42,7 +50,7 @@ func main() {
 	go startPrometheus()
 	defer stopPrometheus()
 	// todo: set remote write url k6 env K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write
-	cmd := exec.Command("k6", "run", "load-test.ts", "--vus", "2", "--duration", "5s", "--out", "experimental-prometheus-rw")
+	cmd := exec.Command("k6", "run", "load-test.ts", "--vus", config.Vus, "--duration", config.Duration, "--out", "experimental-prometheus-rw")
 	output, err := cmd.Output()
 	if err != nil {
 		log.Printf("Error while running k6 binary: %v", err)
